@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-esgdb}
+      POSTGRES_USER: ${POSTGRES_USER:-esg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-esg}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - esg-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-esg} -d ${POSTGRES_DB:-esgdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ${APP_IMAGE:-cidades-esg:local}
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-esgdb}
+      DB_USER: ${POSTGRES_USER:-esg}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-esg}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - esg-net
+
+volumes:
+  pgdata:
+
+networks:
+  esg-net:
+    driver: bridge
