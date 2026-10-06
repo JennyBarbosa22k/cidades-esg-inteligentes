@@ -1,18 +1,21 @@
 # ---------- Estagio 1: build ----------
-FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn -B -q dependency:go-offline
-COPY src ./src
-RUN mvn -B -q clean package -DskipTests
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Restaura dependencias primeiro (aproveita cache de camadas)
+COPY src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj src/EnergiaSustentavel.API/
+RUN dotnet restore src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj
+
+# Copia o codigo e publica em Release
+COPY src/ src/
+RUN dotnet publish src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj \
+    -c Release -o /app/publish /p:UseAppHost=false
 
 # ---------- Estagio 2: runtime (imagem enxuta) ----------
-FROM eclipse-temurin:17-jre-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-RUN addgroup -S esg && adduser -S esg -G esg
-COPY --from=build /app/target/cidades-esg-*.jar app.jar
-USER esg
+ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /app/publish .
+USER app
+ENTRYPOINT ["dotnet", "EnergiaSustentavel.API.dll"]

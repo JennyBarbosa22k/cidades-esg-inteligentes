@@ -1,77 +1,92 @@
 # Projeto - Cidades ESGInteligentes
 
-API REST (Java 17 + Spring Boot 3) para cadastro e consulta de indicadores ESG de cidades
-(índice ESG, emissão de CO₂ e percentual de área verde), com pipeline CI/CD completo,
-containerização com Docker e deploy automatizado em **staging** e **produção**.
+**API Eficiência Energética e Sustentabilidade (ESG)** — API RESTful em **C# / .NET 8** para monitoramento do consumo de energia,
+geração automática de alertas quando o consumo ultrapassa o limite de um equipamento (estilo IoT) e relatórios analíticos de consumo.
+Pipeline CI/CD com GitHub Actions, containerização com Docker e deploy automatizado em **staging** e **produção**.
 
-**Integrantes:** _preencher nome e RM de cada integrante_
+> Tema ESG: eficiência energética e sustentabilidade (pilar Ambiental).
+
+**Integrantes:** _preencher_
+
+**Repositório:** https://github.com/JennyBarbosa22k/cidades-esg-inteligentes
+
+**Ambientes:**
+- Staging: https://esg-staging.onrender.com/swagger
+- Produção: https://esg-production.onrender.com/swagger
+
+> Os apps estão no plano gratuito do Render e "dormem" quando ficam sem acesso: a primeira requisição pode levar cerca de 1 minuto.
 
 ## Como executar localmente com Docker
 
 Pré-requisitos: Docker e Docker Compose.
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/JennyBarbosa22k/cidades-esg-inteligentes.git
 cd cidades-esg-inteligentes
-cp .env.example .env          # ajuste a senha do banco
-docker compose up -d --build  # sobe app + PostgreSQL
+cp .env.example .env          # ajuste a senha do banco e a chave JWT
+docker compose up -d --build  # sobe API + PostgreSQL
 ```
 
-Testes rápidos:
+Acesse o Swagger em **http://localhost:8080/swagger** e o health check em **http://localhost:8080/health**.
+Na primeira execução as tabelas são criadas automaticamente e populadas com dados de exemplo.
 
-```bash
-curl http://localhost:8080/actuator/health
-curl -X POST http://localhost:8080/api/cidades -H "Content-Type: application/json" \
-  -d '{"nome":"Curitiba","estado":"PR","indiceEsg":82,"emissaoCo2":2.1,"areaVerdePercentual":64.5}'
-curl http://localhost:8080/api/cidades
-```
+Para derrubar: `docker compose down` (com `-v` apaga também o volume do banco).
 
-Para derrubar: `docker compose down` (acrescente `-v` para apagar o volume do banco).
+### Autenticação
+
+Endpoints de escrita exigem token JWT. Usuário de exemplo (seed): `admin@energia.com` / `Admin@123`.
+Faça `POST /api/auth/login`, copie o `token` e use o botão **Authorize** do Swagger.
 
 ### Endpoints
 
-| Método | Rota | Descrição |
-|---|---|---|
-| GET | /api/cidades | Lista cidades |
-| GET | /api/cidades/{id} | Busca por id |
-| POST | /api/cidades | Cria cidade |
-| PUT | /api/cidades/{id} | Atualiza cidade |
-| DELETE | /api/cidades/{id} | Remove cidade |
-| GET | /actuator/health | Health check |
+| Recurso | Rotas principais |
+|---|---|
+| Auth | `POST /api/auth/login` |
+| Equipamentos | `GET/POST /api/equipamentos`, `GET/PUT/DELETE /api/equipamentos/{id}` |
+| Leituras | `GET/POST /api/leituras` (gera alerta automático ao exceder o limite), `GET /api/leituras/{id}` |
+| Alertas | `GET /api/alertas`, `PUT /api/alertas/{id}/resolver` |
+| Consumo (analítico) | `GET /api/consumo/dashboard`, `GET /api/consumo/resumo`, `GET /api/consumo/equipamento/{id}` |
+| Saúde | `GET /health` |
+
+Listagens possuem paginação (`pagina`, `tamanhoPagina`). Uma coleção do Postman está em `postman/`.
+
+### Testes
+
+```bash
+dotnet test
+```
+
+Cada controller possui testes xUnit de integração (`WebApplicationFactory<Program>` com banco InMemory).
 
 ## Pipeline CI/CD
 
-**Ferramenta:** GitHub Actions (`.github/workflows/ci-cd.yml`). Imagens publicadas no GitHub Container Registry (GHCR).
+**Ferramentas:** GitHub Actions (`.github/workflows/ci-cd.yml`) para o pipeline e Render como plataforma de hospedagem
+dos ambientes de staging e produção (deploy disparado por *Deploy Hook*).
 
 | Etapa (job) | O que faz | Quando roda |
 |---|---|---|
-| Build e Testes | `mvn clean package` e `mvn test` (4 testes automatizados com MockMvc + H2) | push e pull request na `main` |
-| Build e Push Docker | Gera a imagem e publica no GHCR com tag do commit (`sha`) e `latest` | push na `main` |
-| Deploy Staging | Acessa o servidor por SSH, executa `deploy/deploy.sh`, faz smoke test em `/actuator/health` | após a imagem |
-| Deploy Produção | Mesmo processo para produção, **com aprovação manual** (Required reviewers) | após staging OK |
+| Build e Testes | `dotnet restore`, `dotnet build` e `dotnet test` (testes xUnit de todos os controllers) | push e pull request na `main` |
+| Build da imagem Docker | Constrói a imagem a partir do `Dockerfile`, validando a containerização | após build e testes |
+| Deploy Staging | Aciona o Deploy Hook do Render e faz teste de fumaça em `/health` | push na `main`, após a imagem |
+| Deploy Produção | Mesmo processo, **com aprovação manual** (environment `production` com *Required reviewers*) | após staging OK |
 
-Se qualquer etapa falhar, as seguintes não são executadas. Staging e produção usam a **mesma imagem** (tag do commit), garantindo que o que foi testado é o que vai ao ar.
+Se qualquer etapa falhar, as seguintes não executam. O deploy de produção só acontece depois do staging validado e aprovado.
 
-### Configuração necessária no GitHub
+**Configuração:** environments `staging` e `production` no GitHub, cada um com o secret `RENDER_DEPLOY_HOOK`
+(URL do deploy hook do respectivo serviço no Render).
 
-1. **Settings > Environments**: criar `staging` e `production` (em `production`, ativar *Required reviewers*).
-2. Em cada environment, cadastrar os **secrets** `SSH_HOST`, `SSH_USER`, `SSH_KEY` e as **variables** `STAGING_URL` / `PRODUCTION_URL`
-   (ex.: `http://IP:8081` e `http://IP:8080`).
-3. Settings > Actions > General > Workflow permissions: *Read and write*.
-4. Tornar o pacote GHCR público ou executar `docker login ghcr.io` no servidor.
+**Variáveis de ambiente nos serviços do Render:**
 
-### Preparação do servidor (uma vez)
+| Variável | Descrição |
+|---|---|
+| `ConnectionStrings__DefaultConnection` | Conexão com o PostgreSQL (`Host=...;Database=...;Username=...;Password=...;Search Path=<schema>`) |
+| `Database__Schema` | Schema do ambiente (`staging` ou `producao`), criado automaticamente |
+| `Jwt__Key` | Chave de assinatura do JWT |
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `ASPNETCORE_URLS` | `http://+:10000` |
 
-Uma VM com Docker (ex.: Azure VM, AWS EC2, Oracle Cloud free tier), portas 8080 e 8081 liberadas:
-
-```bash
-mkdir -p ~/esg/staging ~/esg/production
-# copie docker-compose.yml para as duas pastas e crie um .env em cada uma:
-# staging:    COMPOSE_PROJECT_NAME=esg-staging     APP_PORT=8081  POSTGRES_PASSWORD=...
-# production: COMPOSE_PROJECT_NAME=esg-production  APP_PORT=8080  POSTGRES_PASSWORD=...
-```
-
-O `COMPOSE_PROJECT_NAME` isola redes, containers e volumes de cada ambiente.
+Como o plano gratuito do Render permite apenas um banco PostgreSQL, staging e produção compartilham a mesma instância,
+isolados em **schemas diferentes**.
 
 ## Containerização
 
@@ -79,52 +94,66 @@ O `COMPOSE_PROJECT_NAME` isola redes, containers e volumes de cada ambiente.
 
 ```dockerfile
 # ---------- Estagio 1: build ----------
-FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn -B -q dependency:go-offline
-COPY src ./src
-RUN mvn -B -q clean package -DskipTests
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Restaura dependencias primeiro (aproveita cache de camadas)
+COPY src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj src/EnergiaSustentavel.API/
+RUN dotnet restore src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj
+
+# Copia o codigo e publica em Release
+COPY src/ src/
+RUN dotnet publish src/EnergiaSustentavel.API/EnergiaSustentavel.API.csproj \
+    -c Release -o /app/publish /p:UseAppHost=false
 
 # ---------- Estagio 2: runtime (imagem enxuta) ----------
-FROM eclipse-temurin:17-jre-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-RUN addgroup -S esg && adduser -S esg -G esg
-COPY --from=build /app/target/cidades-esg-*.jar app.jar
-USER esg
+ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /app/publish .
+USER app
+ENTRYPOINT ["dotnet", "EnergiaSustentavel.API.dll"]
 ```
 
 Estratégias adotadas:
 
-- **Multi-stage build**: o Maven fica só no estágio de build; a imagem final usa apenas JRE Alpine (menor e mais segura).
-- **Cache de dependências**: `pom.xml` é copiado antes do código para reaproveitar camadas.
-- **Usuário não-root** e **HEALTHCHECK** via Actuator.
-- **docker-compose.yml**: serviços `app` + `db` (PostgreSQL 16), **volume** `pgdata` (persistência), **rede** `esg-net`,
-  **variáveis de ambiente** vindas do `.env`, `depends_on` com `service_healthy` para o app só subir após o banco estar pronto.
+- **Multi-stage build**: o SDK do .NET fica só no estágio de build; a imagem final usa apenas o runtime ASP.NET (menor e mais segura).
+- **Cache de dependências**: o `.csproj` é copiado e restaurado antes do restante do código.
+- **Usuário não-root** (`USER app`) e porta configurada por `ASPNETCORE_URLS`.
+- **docker-compose.yml** (uso local): serviços `api` + `db` (PostgreSQL 16), **volume** `pgdata` (persistência),
+  **rede** `energia-net`, **variáveis de ambiente** via `.env` e `depends_on` com `service_healthy`
+  para a API só subir depois que o banco estiver pronto.
+- Em staging/produção o Render constrói a imagem a partir do mesmo `Dockerfile` e injeta as variáveis de ambiente.
 
 ## Prints do funcionamento
 
-> Insira as imagens em `docs/prints/` e referencie abaixo.
+### Pipeline (GitHub Actions)
 
-| Evidência | Arquivo |
-|---|---|
-| Pipeline executando (build + testes) | ![pipeline](docs/prints/01-pipeline.png) |
-| Testes passando | ![testes](docs/prints/02-testes.png) |
-| Deploy em staging | ![staging](docs/prints/03-deploy-staging.png) |
-| Aprovação e deploy em produção | ![producao](docs/prints/04-deploy-producao.png) |
-| Staging funcionando (/actuator/health e /api/cidades) | ![staging-app](docs/prints/05-staging-funcionando.png) |
-| Produção funcionando | ![prod-app](docs/prints/06-producao-funcionando.png) |
+![Build e Testes](docs/prints/01-build-e-testes.png)
 
-Link do repositório / Actions: _preencher_
+![Build da imagem Docker](docs/prints/02-build-imagem-docker.png)
+
+![Deploy Staging](docs/prints/03-deploy-staging.png)
+
+![Deploy Produção](docs/prints/04-deploy-producao.png)
+
+### Staging (https://esg-staging.onrender.com)
+
+![Staging health](docs/prints/05-staging-health.png)
+
+![Staging swagger](docs/prints/05b-staging-swagger.png)
+
+### Produção (https://esg-production.onrender.com)
+
+![Produção health](docs/prints/06-producao-health.png)
+
+![Produção swagger](docs/prints/06b-producao-swagger.png)
 
 ## Tecnologias utilizadas
 
-Java 17, Spring Boot 3.3 (Web, Data JPA, Validation, Actuator), PostgreSQL 16, H2 (testes), Maven,
-JUnit 5 + MockMvc, Docker, Docker Compose, GitHub Actions, GitHub Container Registry, SSH.
+C# / .NET 8 (ASP.NET Core Web API), Entity Framework Core 8, PostgreSQL 16 (Npgsql), JWT, BCrypt, Swagger/Swashbuckle,
+xUnit + WebApplicationFactory (testes), Docker, Docker Compose, GitHub Actions, Render, Postman.
 
 ## Checklist de entrega
 
@@ -134,6 +163,6 @@ JUnit 5 + MockMvc, Docker, Docker Compose, GitHub Actions, GitHub Container Regi
 | Dockerfile funcional | ☑ |
 | docker-compose.yml ou arquivos Kubernetes | ☑ |
 | Pipeline com etapas de build, teste e deploy | ☑ |
-| README.md com instruções e prints | ☐ (inserir prints) |
-| Documentação técnica com evidências (PDF ou PPT) | ☐ (inserir prints) |
-| Deploy realizado nos ambientes staging e produção | ☐ (executar o pipeline) |
+| README.md com instruções e prints | ☑ |
+| Documentação técnica com evidências (PDF ou PPT) | ☑ |
+| Deploy realizado nos ambientes staging e produção | ☑ |

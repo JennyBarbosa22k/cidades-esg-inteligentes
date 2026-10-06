@@ -3,38 +3,37 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-esgdb}
-      POSTGRES_USER: ${POSTGRES_USER:-esg}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-esg}
+      POSTGRES_DB: ${POSTGRES_DB:-energia}
+      POSTGRES_USER: ${POSTGRES_USER:-energia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-energia}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - esg-net
+      - energia-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-esg} -d ${POSTGRES_DB:-esgdb}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-energia} -d ${POSTGRES_DB:-energia}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    image: ${APP_IMAGE:-cidades-esg:local}
+  api:
     build: .
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-esgdb}
-      DB_USER: ${POSTGRES_USER:-esg}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-esg}
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB:-energia};Username=${POSTGRES_USER:-energia};Password=${POSTGRES_PASSWORD:-energia}
+      Jwt__Key: ${JWT_KEY:-ChaveSuperSecretaParaAssinaturaJWT_TroqueEmProducao_2024_FIAP_ESG_0123456789}
     ports:
       - "${APP_PORT:-8080}:8080"
     networks:
-      - esg-net
+      - energia-net
 
 volumes:
   pgdata:
 
 networks:
-  esg-net:
+  energia-net:
     driver: bridge

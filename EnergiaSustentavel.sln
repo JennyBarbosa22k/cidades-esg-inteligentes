@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergiaSustentavel.API", "src\EnergiaSustentavel.API\EnergiaSustentavel.API.csproj", "{052F155D-BF34-4017-AA43-FE6ED0406614}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergiaSustentavel.Tests", "tests\EnergiaSustentavel.Tests\EnergiaSustentavel.Tests.csproj", "{BDD28F41-7E38-4FED-BB54-618E3E795FD7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{052F155D-BF34-4017-AA43-FE6ED0406614}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{052F155D-BF34-4017-AA43-FE6ED0406614}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{052F155D-BF34-4017-AA43-FE6ED0406614}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{052F155D-BF34-4017-AA43-FE6ED0406614}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDD28F41-7E38-4FED-BB54-618E3E795FD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDD28F41-7E38-4FED-BB54-618E3E795FD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDD28F41-7E38-4FED-BB54-618E3E795FD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD28F41-7E38-4FED-BB54-618E3E795FD7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

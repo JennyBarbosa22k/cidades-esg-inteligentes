@@ -1,0 +1,280 @@
+{
+  "info": {
+    "_postman_id": "b3f1c2a4-7d5e-4a9b-9c1d-energia-esg-2024",
+    "name": "Energia Sustentável - API ESG",
+    "description": "Coleção de testes da API RESTful de Eficiência Energética (Tema ESG 1). Rode primeiro 'Auth > Login' para salvar o token automaticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (salva token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o token JWT no environment para usar nas demais requisições",
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set(\"token\", json.token);",
+                  "    pm.test(\"Status code 200\", function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    pm.test(\"Token recebido\", function () {",
+                  "        pm.expect(json.token).to.be.a(\"string\").and.not.empty;",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Login falhou\", function () {",
+                  "        pm.expect(pm.response.code).to.eql(200);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@energia.com\",\n  \"senha\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Autentica o usuário administrador e retorna o token JWT."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Equipamentos",
+      "item": [
+        {
+          "name": "Listar (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipamentos?pagina=1&tamanhoPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipamentos"],
+              "query": [
+                { "key": "pagina", "value": "1" },
+                { "key": "tamanhoPagina", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipamentos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipamentos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Criar (protegido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Compressor Industrial\",\n  \"localizacao\": \"Galpão 2 - Linha B\",\n  \"potenciaWatts\": 5000,\n  \"limiteConsumoKwh\": 20,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/equipamentos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipamentos"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar (protegido)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Compressor Industrial (revisado)\",\n  \"localizacao\": \"Galpão 2 - Linha B\",\n  \"potenciaWatts\": 5200,\n  \"limiteConsumoKwh\": 22,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/equipamentos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipamentos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Remover (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipamentos/3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipamentos", "3"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leituras",
+      "item": [
+        {
+          "name": "Listar (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leituras?pagina=1&tamanhoPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leituras"],
+              "query": [
+                { "key": "pagina", "value": "1" },
+                { "key": "tamanhoPagina", "value": "10" },
+                { "key": "equipamentoId", "value": "1", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leituras/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leituras", "1"]
+            }
+          }
+        },
+        {
+          "name": "Registrar leitura (dispara alerta)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipamentoId\": 1,\n  \"consumoKwh\": 25.0,\n  \"fonte\": \"Sensor IoT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leituras",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leituras"]
+            },
+            "description": "O equipamento 1 tem limite de 15 kWh. Consumo de 25 kWh gera um alerta automático."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alertas",
+      "item": [
+        {
+          "name": "Listar não resolvidos (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas?pagina=1&tamanhoPagina=10&resolvido=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alertas"],
+              "query": [
+                { "key": "pagina", "value": "1" },
+                { "key": "tamanhoPagina", "value": "10" },
+                { "key": "resolvido", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resolver alerta (protegido)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas/1/resolver",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alertas", "1", "resolver"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consumo",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/consumo/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "consumo", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Resumo por equipamento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/consumo/resumo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "consumo", "resumo"]
+            }
+          }
+        },
+        {
+          "name": "Resumo de um equipamento (protegido)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consumo/equipamento/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "consumo", "equipamento", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://localhost:7099" }
+  ]
+}
