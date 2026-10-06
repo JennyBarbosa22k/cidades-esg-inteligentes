@@ -11,6 +11,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Nome gerado uma única vez por instância da fábrica, para que todas as
+        // requisições e o seed usem o mesmo banco em memória.
+        var dbName = "TestDb_" + Guid.NewGuid();
+
         builder.ConfigureServices(services =>
         {
             // Remove o registro do DbContext que usa SQL Server.
@@ -19,9 +23,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             if (descriptor is not null)
                 services.Remove(descriptor);
 
-            // Registra o DbContext usando banco em memória, com nome único por instância.
+            // Registra o DbContext usando banco em memória com o nome fixo acima.
             services.AddDbContext<AppDbContext>(options =>
-                options.UseInMemoryDatabase("TestDb_" + Guid.NewGuid()));
+                options.UseInMemoryDatabase(dbName));
         });
 
         builder.UseEnvironment("Development");
