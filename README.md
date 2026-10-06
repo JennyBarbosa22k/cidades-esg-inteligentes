@@ -6,7 +6,11 @@ Pipeline CI/CD com GitHub Actions, containerização com Docker e deploy automat
 
 > Tema ESG: eficiência energética e sustentabilidade (pilar Ambiental).
 
-**Integrantes:** _preencher_
+**Integrantes:** Jennyfer Barbosa de Souza
+                 Arthur Wylliam Santos Brandão
+                 Nargila Soares Mota
+                 Pedro Felippe Colaço de Biazi 
+                 Carlos Antonio Campos Machado Junior
 
 **Repositório:** https://github.com/JennyBarbosa22k/cidades-esg-inteligentes
 
@@ -130,25 +134,25 @@ Estratégias adotadas:
 
 ### Pipeline (GitHub Actions)
 
-![Build e Testes](docs/prints/01-build-e-testes.png)
+![Build e Testes](testes.png)
 
-![Build da imagem Docker](docs/prints/02-build-imagem-docker.png)
+![Build da imagem Docker](pipeline.png)
 
-![Deploy Staging](docs/prints/03-deploy-staging.png)
+![Deploy Staging](Deploy%20Staging.png)
 
-![Deploy Produção](docs/prints/04-deploy-producao.png)
+![Deploy Produção](Deploy%20Producao.png)
 
 ### Staging (https://esg-staging.onrender.com)
 
-![Staging health](docs/prints/05-staging-health.png)
+![Staging health](05-staging-health.png.png)
 
-![Staging swagger](docs/prints/05b-staging-swagger.png)
+![Staging swagger](05b-staging-swagger.png.png)
 
 ### Produção (https://esg-production.onrender.com)
 
-![Produção health](docs/prints/06-producao-health.png)
+![Produção health](06-producao-health.png.png)
 
-![Produção swagger](docs/prints/06b-producao-swagger.png)
+![Produção swagger](06b-producao-swagger.png.png)
 
 ## Tecnologias utilizadas
 
