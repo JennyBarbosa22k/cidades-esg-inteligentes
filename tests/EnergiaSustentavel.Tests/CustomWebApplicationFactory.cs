@@ -8,7 +8,7 @@ namespace EnergiaSustentavel.Tests;
 
 /// <summary>
 /// Fábrica de aplicação para os testes de integração. Substitui o provedor de banco
-/// (SQL Server) por um banco em memória (EF Core InMemory), garantindo que os testes
+/// (PostgreSQL) por um banco em memória (EF Core InMemory), garantindo que os testes
 /// rodem sem depender de um banco real. O seed inicial é executado pelo próprio
 /// Program na inicialização, populando dados para os testes.
 /// </summary>
@@ -22,7 +22,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Remove o registro do DbContext que usa SQL Server.
+            // Remove o registro do DbContext que usa PostgreSQL.
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor is not null)

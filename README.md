@@ -6,11 +6,15 @@ Pipeline CI/CD com GitHub Actions, containerização com Docker e deploy automat
 
 > Tema ESG: eficiência energética e sustentabilidade (pilar Ambiental).
 
-**Integrantes:** Jennyfer Barbosa de Souza
-                 Arthur Wylliam Santos Brandão
-                 Nargila Soares Mota
-                 Pedro Felippe Colaço de Biazi 
-                 Carlos Antonio Campos Machado Junior
+**Integrantes:**
+
+| Nome | RM |
+|---|---|
+| Arthur Wylliam Santos Brandão | RM562519 |
+| Carlos Antonio Campos Machado | RM562904 |
+| Jennyfer Barbosa de Souza | RM565354 |
+| Nargila Soares Mota | RM562956 |
+| Pedro Felippe Colaço De Biazi | RM553309 |
 
 **Repositório:** https://github.com/JennyBarbosa22k/cidades-esg-inteligentes
 
@@ -128,31 +132,35 @@ Estratégias adotadas:
 - **docker-compose.yml** (uso local): serviços `api` + `db` (PostgreSQL 16), **volume** `pgdata` (persistência),
   **rede** `energia-net`, **variáveis de ambiente** via `.env` e `depends_on` com `service_healthy`
   para a API só subir depois que o banco estiver pronto.
-- Em staging/produção o Render constrói a imagem a partir do mesmo `Dockerfile` e injeta as variáveis de ambiente.
+- Em staging/produção o Render constrói a imagem a partir do mesmo `Dockerfile` e injeta as variáveis de ambiente. O job "Build da imagem Docker" do pipeline valida que o `Dockerfile` constrói antes de qualquer deploy.
 
 ## Prints do funcionamento
 
 ### Pipeline (GitHub Actions)
 
-![Build e Testes](testes.png)
+![Pipeline completa](docs/prints/01-pipeline-geral.png)
 
-![Build da imagem Docker](pipeline.png)
+![Build e Testes](docs/prints/02-build-e-testes.png)
 
-![Deploy Staging](Deploy%20Staging.png)
+![Testes automatizados - 10 aprovados](docs/prints/03-testes-passed-10.png)
 
-![Deploy Produção](Deploy%20Producao.png)
+![Build da imagem Docker](docs/prints/04-build-imagem-docker.png)
+
+![Deploy Staging](docs/prints/05-deploy-staging.png)
+
+![Deploy Produção](docs/prints/06-deploy-producao.png)
 
 ### Staging (https://esg-staging.onrender.com)
 
-![Staging health](05-staging-health.png.png)
+![Staging health](docs/prints/07-staging-health.png)
 
-![Staging swagger](05b-staging-swagger.png.png)
+![Staging swagger](docs/prints/08-staging-swagger.png)
 
 ### Produção (https://esg-production.onrender.com)
 
-![Produção health](06-producao-health.png.png)
+![Produção health](docs/prints/09-producao-health.png)
 
-![Produção swagger](06b-producao-swagger.png.png)
+![Produção swagger](docs/prints/10-producao-swagger.png)
 
 ## Tecnologias utilizadas
 
@@ -170,3 +178,5 @@ xUnit + WebApplicationFactory (testes), Docker, Docker Compose, GitHub Actions, 
 | README.md com instruções e prints | ☑ |
 | Documentação técnica com evidências (PDF ou PPT) | ☑ |
 | Deploy realizado nos ambientes staging e produção | ☑ |
+
+Documentação técnica completa (PDF): `docs/Documentacao-Cidades-ESG-DevOps.pdf`.
