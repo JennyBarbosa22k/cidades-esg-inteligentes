@@ -1,18 +1,69 @@
-  build-test:
-    name: Construir e testar
-    runs-on: ubuntu-latest
+name: CI/CD - Cidades ESG (Energia Sustentavel)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build e Testes
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
-      - name: Restaurar
-        run: dotnet restore
-
+      - name: Restaurar dependencias
+        run: dotnet restore EnergiaSustentavel.sln
       - name: Build
-        run: dotnet build --no-restore -c Release
-
+        run: dotnet build EnergiaSustentavel.sln -c Release --no-restore
       - name: Testes automatizados
-        run: dotnet test --no-build -c Release --verbosity normal
+        run: dotnet test EnergiaSustentavel.sln -c Release --no-build --verbosity normal
+
+  docker-build:
+    name: Build da imagem Docker
+    needs: build-and-test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagem
+        run: docker build -t energia-sustentavel:${{ github.sha }} .
+
+  deploy-staging:
+    name: Deploy Staging
+    needs: docker-build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    environment:
+      name: staging
+      url: https://esg-staging.onrender.com/swagger
+    steps:
+      - name: Disparar deploy no Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl --fail -X POST "$HOOK"
+      - name: Teste de fumaca
+        run: |
+          sleep 90
+          curl --fail --retry 20 --retry-delay 15 --retry-all-errors --max-time 30 https://esg-staging.onrender.com/health
+
+  deploy-production:
+    name: Deploy Producao
+    needs: deploy-staging
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://esg-production.onrender.com/swagger
+    steps:
+      - name: Disparar deploy no Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl --fail -X POST "$HOOK"
+      - name: Teste de fumaca
+        run: |
+          sleep 90
+          curl --fail --retry 20 --retry-delay 15 --retry-all-errors --max-time 30 https://esg-production.onrender.com/health
