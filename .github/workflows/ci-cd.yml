@@ -1,13 +1,3 @@
-name: CI/CD
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
   build-test:
     name: Construir e testar
     runs-on: ubuntu-latest
@@ -19,10 +9,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restaurar
-        run: dotnet restore EnergiaSustentavel.sln
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build EnergiaSustentavel.sln --no-restore -c Release
+        run: dotnet build --no-restore -c Release
 
       - name: Testes automatizados
-        run: dotnet test EnergiaSustentavel.sln --no-build -c Release --verbosity normal
+        run: dotnet test --no-build -c Release --verbosity normal
