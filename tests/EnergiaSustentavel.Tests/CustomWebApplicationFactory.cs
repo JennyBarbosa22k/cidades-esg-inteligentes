@@ -2,11 +2,16 @@ using EnergiaSustentavel.API.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EnergiaSustentavel.Tests;
 
-
+/// <summary>
+/// Fábrica de aplicação para os testes de integração. Substitui o provedor de banco
+/// (SQL Server) por um banco em memória (EF Core InMemory), garantindo que os testes
+/// rodem sem depender de um banco real. O seed inicial é executado pelo próprio
+/// Program na inicialização, populando dados para os testes.
+/// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
